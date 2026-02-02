@@ -1,0 +1,33 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: gateway-service
+
+  cloud:
+    gateway:
+      routes:
+        - id: booking-route
+          uri: lb://booking-service
+          predicates:
+            - Path=/api/bookings/**
+
+        - id: inventory-route
+          uri: lb://inventory-service
+          predicates:
+            - Path=/inventory/**
+
+eureka:
+  instance:
+    prefer-ip-address: true
+    lease-renewal-interval-in-seconds: 10
+    lease-expiration-duration-in-seconds: 30
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+
+logging:
+  level:
+    org.springframework.cloud.gateway: DEBUG
+

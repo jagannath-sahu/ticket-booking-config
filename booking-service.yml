@@ -1,0 +1,77 @@
+server:
+  port: 8081
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+
+spring:
+  kafka:
+    bootstrap-servers: localhost:19092
+
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      #DEFAULT serializer Spring Boot will autoconfigure, if you need both string and json then you have to create configs
+      #beacuse by default autoconfiguration Spring Boot can auto-create only one default KafkaTemplate
+      #and Kafka itself does not know topics are String or JSON, we need both that is why we have created KafkaJsonProducerConfig
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+      acks: all
+      retries: 3
+      properties:
+        linger.ms: 5
+
+    consumer:
+      group-id: movie-booking-group
+      auto-offset-reset: earliest
+      enable-auto-commit: false
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+
+    listener:
+      ack-mode: manual
+  datasource:
+    # Embedded DB disabled – using Postgres via Docker Compose
+    url: jdbc:postgresql://localhost:5432/aionar
+    username: local
+    password: password123
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+
+resilience4j:
+  retry:
+    instances:
+      inventory:
+        max-attempts: 3
+        wait-duration: 200ms
+
+  circuitbreaker:
+    instances:
+      inventory:
+        sliding-window-size: 6
+        minimum-number-of-calls: 4
+        failure-rate-threshold: 50
+        wait-duration-in-open-state: 10s
+        permitted-number-of-calls-in-half-open-state: 2
+
+logging:
+  level:
+    io.github.resilience4j.retry: DEBUG
+    io.github.resilience4j.circuitbreaker: DEBUG
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,metrics,circuitbreakers
+  endpoint:
+    health:
+      show-details: always
+
